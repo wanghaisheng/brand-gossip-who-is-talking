@@ -54,12 +54,12 @@ def gossip():
         
         # Save results to CSV
         os.makedirs('result', exist_ok=True)
-        results_df.to_csv('result/report.csv', index=False)
+        results_df.to_csv(f'result/report-{k}.csv', index=False)
 
         # Output monitoring statistics if results are found
         if not results_df.empty:
-            print("\n=== 监控统计 ===")
-            print(f"总计发现新页面: {len(results_df)}")
+            print("\n=== {k} 监控统计 ===")
+            print(f"总计发现{k}新页面: {len(results_df)}")
             print(results_df['site'].value_counts())
 
 if __name__ == "__main__":
