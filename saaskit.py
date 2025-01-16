@@ -3,7 +3,7 @@ from domainMonitorDp import DomainMonitor
 
 def gossip():
     # Retrieve keywords and domain from environment variables or use default
-    keywords = os.getenv('expression', 'intext:"saas kit"')
+    keywords = os.getenv('keywords', 'intext:"saas kit"')
     sites = ['twitter.com', 'youtube.com', 'tiktok.com', 'reddit.com']
 
     # Initialize DomainMonitor instance
