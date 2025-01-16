@@ -43,7 +43,7 @@ jobs:
       - name: Run the scraping script
         run: python saaskit.py
         env:
-          domain: ${{ github.event.inputs.keywords }}          
+          domain: ${{ github.event.inputs.domain }}          
           count: ${{ github.event.inputs.count }}          
           keywords: ${{ github.event.inputs.keywords }}          
 
