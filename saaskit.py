@@ -14,10 +14,16 @@ def gossip():
     if domain:
         if domain=='':
             pass
+            print('no target domain input')
         elif ',' in domain:
+            print('more than 1 target domain input')
+
             sites = [d.strip() for d in domain.split(',')]
         else:
+            print('1 target domain input')
+            
             sites = [domain]
+    print('=====sites',sites)
 
     # Ensure at least one keyword is provided
     if not keywords:
