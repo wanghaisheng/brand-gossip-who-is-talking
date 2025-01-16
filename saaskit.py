@@ -12,7 +12,9 @@ def gossip():
     # Retrieve and process the 'domain' environment variable
     domain = os.getenv('domain', '').strip()
     if domain:
-        if ',' in domain:
+        if domain=='':
+            pass
+        elif ',' in domain:
             sites = [d.strip() for d in domain.split(',')]
         else:
             sites = [domain]
