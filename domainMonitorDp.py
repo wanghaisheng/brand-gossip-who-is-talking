@@ -212,6 +212,7 @@ class DomainMonitor:
                 
                 tab.get(search_url)              
                 html=tab.html
+                print('html===',html)
                 if page == 0:  # Extract total result count only on the first page
                     soup = BeautifulSoup(html, 'html.parser')
                     result_stats = soup.select_one('#result-stats')
