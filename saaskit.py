@@ -44,7 +44,7 @@ def gossip():
 
         # Construct search queries for each site
         for s in sites:
-            advanced_queries[s] = f'{expression} site:{s}'
+            advanced_queries[s] = f'"{expression}" site:{s}'
 
         # Print constructed queries for debugging
         print('==', advanced_queries)
