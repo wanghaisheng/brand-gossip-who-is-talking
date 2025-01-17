@@ -226,6 +226,7 @@ class DomainMonitor:
                 results = self.extract_search_results(html)
                 if not results:  # If no results are found for a page, assume there are no more pages
                     self.logger.info(f"No more results found for {site} on page {page + 1}")
+                    self.logger.debug(f'current serp resut',soup)
                     break
 
                 all_results.extend(results)
