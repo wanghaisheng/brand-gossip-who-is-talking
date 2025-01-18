@@ -214,11 +214,13 @@ class DomainMonitor:
                 
                 tab.get(search_url)              
                 html=tab.html
-                print('html===',html)
                 if 'Our systems have detected unusual traffic from your computer network' in html:
-                    self.logger.error(f'google risk trigger',html)
+                    self.logger.error(f'google risk trigger，try to bypass')
                     recaptchaSolver = RecaptchaSolver(driver)
-                    recaptchaSolver.solveCaptcha()
+                    recaptchaSolver.solveCaptcha(tab)
+                    
+                    if 'Our systems have detected unusual traffic from your computer network' in tab.html:
+                        print('bypass sucessful')
 
                     # break 
                 if page == 0:  # Extract total result count only on the first page
