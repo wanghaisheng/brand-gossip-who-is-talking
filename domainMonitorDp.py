@@ -220,6 +220,8 @@ class DomainMonitor:
                 html=tab.html
                 if 'Our systems have detected unusual traffic from your computer network' in html:
                     self.logger.error(f'google risk trigger，try to bypass')
+                    audio=tab.ele('#audio-source')
+                    print('found audio button',audio)
                     recaptchaSolver.solveCaptcha()
                     
                     if 'Our systems have detected unusual traffic from your computer network' in tab.html:
