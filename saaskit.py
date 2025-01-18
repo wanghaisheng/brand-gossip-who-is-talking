@@ -1,5 +1,6 @@
 import os
 from domainMonitorDp import DomainMonitor
+from domainMonitor import DomainMonitor
 
 def gossip():
     # Retrieve keywords and domain from environment variables or use default
