@@ -210,13 +210,15 @@ class DomainMonitor:
             self.logger.info(f"Monitoring {site} for {time_range}, page {page + 1}")
 
             try:
-                tab=browser.new_tab()
+                recaptchaSolver = RecaptchaSolver(browser)
                 
+                # tab=browser.new_tab()
+                tab=browser
                 tab.get(search_url)              
+                
                 html=tab.html
                 if 'Our systems have detected unusual traffic from your computer network' in html:
                     self.logger.error(f'google risk trigger，try to bypass')
-                    recaptchaSolver = RecaptchaSolver(tab)
                     recaptchaSolver.solveCaptcha()
                     
                     if 'Our systems have detected unusual traffic from your computer network' in tab.html:
