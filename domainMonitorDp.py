@@ -216,8 +216,8 @@ class DomainMonitor:
                 html=tab.html
                 if 'Our systems have detected unusual traffic from your computer network' in html:
                     self.logger.error(f'google risk trigger，try to bypass')
-                    recaptchaSolver = RecaptchaSolver(driver)
-                    recaptchaSolver.solveCaptcha(tab)
+                    recaptchaSolver = RecaptchaSolver(tab)
+                    recaptchaSolver.solveCaptcha()
                     
                     if 'Our systems have detected unusual traffic from your computer network' in tab.html:
                         print('bypass sucessful')
