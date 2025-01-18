@@ -210,10 +210,11 @@ class DomainMonitor:
             self.logger.info(f"Monitoring {site} for {time_range}, page {page + 1}")
 
             try:
-                recaptchaSolver = RecaptchaSolver(browser)
-                
-                # tab=browser.new_tab()
-                tab=browser
+            
+                tab=browser.new_tab()
+                recaptchaSolver = RecaptchaSolver(tab)
+
+                # tab=browser
                 tab.get(search_url)              
                 
                 html=tab.html
