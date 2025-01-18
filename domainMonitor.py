@@ -72,7 +72,7 @@ class DomainMonitor:
             
         elif  time_range=='all':
             print("default is all results")
-            pass
+            tbs=None
         
         query = f'site:{site}'
         params = {
@@ -105,7 +105,7 @@ class DomainMonitor:
             
         elif  time_range=='all':
             print("default is all results")
-            pass
+            tbs=None
 
         params = {
             'q': query,
