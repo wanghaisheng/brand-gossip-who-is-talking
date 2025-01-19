@@ -38,12 +38,14 @@ class RecaptchaSolver:
         )
         time.sleep(0.1)
         iframe_inner = self.driver("@title=reCAPTCHA")
+        print('found reCAPTCHA')
 
         # Click the checkbox
         iframe_inner.wait.ele_displayed(
             ".rc-anchor-content", timeout=self.TIMEOUT_STANDARD
         )
         iframe_inner(".rc-anchor-content", timeout=self.TIMEOUT_SHORT).click()
+        print('found reCAPTCHA and click checkbox')
 
         # Check if solved by just clicking
         if self.is_solved():
@@ -51,10 +53,14 @@ class RecaptchaSolver:
 
         # Handle audio challenge
         iframe = self.driver("xpath://iframe[contains(@title, 'recaptcha')]")
+        print('found reCAPTCHA  recaptcha iframe')
+        
         iframe.wait.ele_displayed(
             "#recaptcha-audio-button", timeout=self.TIMEOUT_STANDARD
         )
         iframe("#recaptcha-audio-button", timeout=self.TIMEOUT_SHORT).click()
+        print('found reCAPTCHA  recaptcha iframe click audio button')
+        
         time.sleep(0.3)
 
         if self.is_detected():
@@ -63,11 +69,16 @@ class RecaptchaSolver:
         # Download and process audio
         iframe.wait.ele_displayed("#audio-source", timeout=self.TIMEOUT_STANDARD)
         src = iframe("#audio-source").attrs["src"]
+        print('found audio source')
 
         try:
             text_response = self._process_audio_challenge(src)
+            print('get audio text_response',text_response)
+            
             iframe("#audio-response").input(text_response.lower())
             iframe("#recaptcha-verify-button").click()
+            print('click audio verify button')
+            
             time.sleep(0.4)
 
             if not self.is_solved():
