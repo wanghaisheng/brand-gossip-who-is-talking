@@ -13,7 +13,7 @@ from DrissionPage.common import Settings
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Browser(Protocol):
-    def wait.ele_displayed(self, selector:str, timeout:int): ...
+    # def wait.ele_displayed(self, selector:str, timeout:int): ...
     def element(self, selector: str, timeout: int): ...
     def click(self): ...
     def input(self, value: str): ...
@@ -26,8 +26,8 @@ class Browser(Protocol):
 class DrissionPageBrowser(Browser):
     def __init__(self, driver: Chromium):
         self.driver = driver
-    def wait.ele_displayed(self, selector:str, timeout:int):
-        self.driver.wait.ele_displayed(selector, timeout=timeout)
+    # def wait.ele_displayed(self, selector:str, timeout:int):
+        # self.driver.wait.ele_displayed(selector, timeout=timeout)
     def element(self, selector: str, timeout: int):
         return self.driver.ele(selector, timeout=timeout)
     def click(self):
