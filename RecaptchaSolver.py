@@ -92,14 +92,14 @@ class RecaptchaSolver:
             "@title=reCAPTCHA", timeout=self.timeouts["standard"]
         )
         time.sleep(0.1)
-        iframe_inner = self.driver.element("@title=reCAPTCHA", timeout=self.timeouts["standard"])
+        iframe_inner = self.driver.ele("@title=reCAPTCHA", timeout=self.timeouts["standard"])
         logging.info('found reCAPTCHA')
 
         # Click the checkbox
         iframe_inner.wait.ele_displayed(
             ".rc-anchor-content", timeout=self.timeouts["standard"]
         )
-        iframe_inner.element(".rc-anchor-content", timeout=self.timeouts["short"]).click()
+        iframe_inner.ele(".rc-anchor-content", timeout=self.timeouts["short"]).click()
         logging.info('found reCAPTCHA and click checkbox')
 
         # Check if solved by just clicking
@@ -107,13 +107,13 @@ class RecaptchaSolver:
             return
 
         # Handle audio challenge
-        iframe = self.driver.element("xpath://iframe[contains(@title, 'recaptcha')]", timeout=self.timeouts["standard"])
+        iframe = self.driver.ele("xpath://iframe[contains(@title, 'recaptcha')]", timeout=self.timeouts["standard"])
         logging.info('found reCAPTCHA  recaptcha iframe')
 
         iframe.wait.ele_displayed(
             "#recaptcha-audio-button", timeout=self.timeouts["standard"]
         )
-        iframe.element("#recaptcha-audio-button", timeout=self.timeouts["short"]).click()
+        iframe.ele("#recaptcha-audio-button", timeout=self.timeouts["short"]).click()
         logging.info('found reCAPTCHA  recaptcha iframe click audio button')
 
         time.sleep(0.3)
@@ -123,15 +123,15 @@ class RecaptchaSolver:
 
         # Download and process audio
         iframe.wait.ele_displayed("#audio-source", timeout=self.timeouts["standard"])
-        src = iframe.element("#audio-source", timeout=self.timeouts["standard"]).attrs()["src"]
+        src = iframe.ele("#audio-source", timeout=self.timeouts["standard"]).attrs()["src"]
         logging.info('found audio source')
 
         try:
             text_response = self._process_audio_challenge(src)
             logging.info(f'get audio text_response: {text_response}')
 
-            iframe.element("#audio-response", timeout=self.timeouts["standard"]).input(text_response.lower())
-            iframe.element("#recaptcha-verify-button", timeout=self.timeouts["standard"]).click()
+            iframe.ele("#audio-response", timeout=self.timeouts["standard"]).input(text_response.lower())
+            iframe.ele("#recaptcha-verify-button", timeout=self.timeouts["standard"]).click()
             logging.info('click audio verify button')
 
             time.sleep(0.4)
@@ -177,7 +177,7 @@ class RecaptchaSolver:
         try:
             return (
                 "style"
-                in self.driver.element(
+                in self.driver.ele(
                     ".recaptcha-checkbox-checkmark", timeout=self.timeouts["short"]
                 ).attrs()
             )
@@ -188,8 +188,8 @@ class RecaptchaSolver:
         """Check if the bot has been detected."""
         try:
             return (
-                self.driver.element("Try again later", timeout=self.timeouts["detection"])
-                .element_states()
+                self.driver.ele("Try again later", timeout=self.timeouts["detection"])
+                .ele_states()
                 .is_displayed
             )
         except Exception:
@@ -198,7 +198,7 @@ class RecaptchaSolver:
     def get_token(self) -> Optional[str]:
         """Get the reCAPTCHA token if available."""
         try:
-            return self.driver.element("#recaptcha-token", timeout=self.timeouts["standard"]).attrs()["value"]
+            return self.driver.ele("#recaptcha-token", timeout=self.timeouts["standard"]).attrs()["value"]
         except Exception:
             return None
 
