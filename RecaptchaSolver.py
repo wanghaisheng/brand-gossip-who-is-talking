@@ -4,8 +4,46 @@ import random
 import pydub
 import speech_recognition
 import time
-from typing import Optional
-from DrissionPage import ChromiumPage
+from typing import Optional, Protocol
+import logging
+from DrissionPage import Chromium
+from DrissionPage.common import Settings
+
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+class Browser(Protocol):
+    def wait_element_displayed(self, selector:str, timeout:int): ...
+    def element(self, selector: str, timeout: int): ...
+    def click(self): ...
+    def input(self, value: str): ...
+    def element_states(self): ...
+    def attrs(self) -> dict: ...
+    def clear_cookies(self): ...
+    def get(self, url: str): ...
+    def quit(self): ...
+
+class DrissionPageBrowser(Browser):
+    def __init__(self, driver: Chromium):
+        self.driver = driver
+    def wait_element_displayed(self, selector:str, timeout:int):
+        self.driver.wait.ele_displayed(selector, timeout=timeout)
+    def element(self, selector: str, timeout: int):
+        return self.driver.ele(selector, timeout=timeout)
+    def click(self):
+        self.driver.click()
+    def input(self, value: str):
+        self.driver.input(value)
+    def element_states(self):
+        return self.driver.states()
+    def attrs(self) -> dict:
+        return self.driver.attrs
+    def clear_cookies(self):
+        self.driver.clear_cookies()
+    def get(self, url: str):
+        self.driver.get(url)
+    def quit(self):
+        self.driver.quit()
 
 
 class RecaptchaSolver:
@@ -16,14 +54,21 @@ class RecaptchaSolver:
     TIMEOUT_STANDARD = 7
     TIMEOUT_SHORT = 1
     TIMEOUT_DETECTION = 0.05
+    RETRY_COUNT = 2
 
-    def __init__(self, driver: ChromiumPage) -> None:
-        """Initialize the solver with a ChromiumPage driver.
+    def __init__(self, driver: Browser, timeouts: dict=None) -> None:
+        """Initialize the solver with a Chromium driver.
 
         Args:
-            driver: ChromiumPage instance for browser interaction
+            driver: Browser instance for browser interaction
         """
         self.driver = driver
+        self.recognizer = speech_recognition.Recognizer()
+        self.timeouts = timeouts or {
+             "standard": self.TIMEOUT_STANDARD,
+             "short": self.TIMEOUT_SHORT,
+             "detection": self.TIMEOUT_DETECTION
+        }
 
     def solveCaptcha(self) -> None:
         """Attempt to solve the reCAPTCHA challenge.
@@ -31,54 +76,64 @@ class RecaptchaSolver:
         Raises:
             Exception: If captcha solving fails or bot is detected
         """
-        
+        for attempt in range(self.RETRY_COUNT):
+            try:
+                self._solve_captcha_attempt()
+                return  # Exit if successful
+            except Exception as e:
+                logging.error(f"Attempt {attempt + 1} failed: {e}")
+                time.sleep(2)  # Small backoff before retrying
+        raise Exception("Captcha failed after multiple retries.")
+
+
+    def _solve_captcha_attempt(self) -> None:
         # Handle main reCAPTCHA iframe
-        self.driver.wait.ele_displayed(
-            "@title=reCAPTCHA", timeout=self.TIMEOUT_STANDARD
+        self.driver.wait_element_displayed(
+            "@title=reCAPTCHA", timeout=self.timeouts["standard"]
         )
         time.sleep(0.1)
-        iframe_inner = self.driver("@title=reCAPTCHA")
-        print('found reCAPTCHA')
+        iframe_inner = self.driver.element("@title=reCAPTCHA", timeout=self.timeouts["standard"])
+        logging.info('found reCAPTCHA')
 
         # Click the checkbox
-        iframe_inner.wait.ele_displayed(
-            ".rc-anchor-content", timeout=self.TIMEOUT_STANDARD
+        iframe_inner.wait_element_displayed(
+            ".rc-anchor-content", timeout=self.timeouts["standard"]
         )
-        iframe_inner(".rc-anchor-content", timeout=self.TIMEOUT_SHORT).click()
-        print('found reCAPTCHA and click checkbox')
+        iframe_inner.element(".rc-anchor-content", timeout=self.timeouts["short"]).click()
+        logging.info('found reCAPTCHA and click checkbox')
 
         # Check if solved by just clicking
         if self.is_solved():
             return
 
         # Handle audio challenge
-        iframe = self.driver("xpath://iframe[contains(@title, 'recaptcha')]")
-        print('found reCAPTCHA  recaptcha iframe')
-        
-        iframe.wait.ele_displayed(
-            "#recaptcha-audio-button", timeout=self.TIMEOUT_STANDARD
+        iframe = self.driver.element("xpath://iframe[contains(@title, 'recaptcha')]", timeout=self.timeouts["standard"])
+        logging.info('found reCAPTCHA  recaptcha iframe')
+
+        iframe.wait_element_displayed(
+            "#recaptcha-audio-button", timeout=self.timeouts["standard"]
         )
-        iframe("#recaptcha-audio-button", timeout=self.TIMEOUT_SHORT).click()
-        print('found reCAPTCHA  recaptcha iframe click audio button')
-        
+        iframe.element("#recaptcha-audio-button", timeout=self.timeouts["short"]).click()
+        logging.info('found reCAPTCHA  recaptcha iframe click audio button')
+
         time.sleep(0.3)
 
         if self.is_detected():
             raise Exception("Captcha detected bot behavior")
 
         # Download and process audio
-        iframe.wait.ele_displayed("#audio-source", timeout=self.TIMEOUT_STANDARD)
-        src = iframe("#audio-source").attrs["src"]
-        print('found audio source')
+        iframe.wait_element_displayed("#audio-source", timeout=self.timeouts["standard"])
+        src = iframe.element("#audio-source", timeout=self.timeouts["standard"]).attrs()["src"]
+        logging.info('found audio source')
 
         try:
             text_response = self._process_audio_challenge(src)
-            print('get audio text_response',text_response)
-            
-            iframe("#audio-response").input(text_response.lower())
-            iframe("#recaptcha-verify-button").click()
-            print('click audio verify button')
-            
+            logging.info(f'get audio text_response: {text_response}')
+
+            iframe.element("#audio-response", timeout=self.timeouts["standard"]).input(text_response.lower())
+            iframe.element("#recaptcha-verify-button", timeout=self.timeouts["standard"]).click()
+            logging.info('click audio verify button')
+
             time.sleep(0.4)
 
             if not self.is_solved():
@@ -104,11 +159,10 @@ class RecaptchaSolver:
             sound = pydub.AudioSegment.from_mp3(mp3_path)
             sound.export(wav_path, format="wav")
 
-            recognizer = speech_recognition.Recognizer()
             with speech_recognition.AudioFile(wav_path) as source:
-                audio = recognizer.record(source)
+                audio = self.recognizer.record(source)
 
-            return recognizer.recognize_google(audio)
+            return self.recognizer.recognize_google(audio)
 
         finally:
             for path in (mp3_path, wav_path):
@@ -123,9 +177,9 @@ class RecaptchaSolver:
         try:
             return (
                 "style"
-                in self.driver.ele(
-                    ".recaptcha-checkbox-checkmark", timeout=self.TIMEOUT_SHORT
-                ).attrs
+                in self.driver.element(
+                    ".recaptcha-checkbox-checkmark", timeout=self.timeouts["short"]
+                ).attrs()
             )
         except Exception:
             return False
@@ -134,8 +188,8 @@ class RecaptchaSolver:
         """Check if the bot has been detected."""
         try:
             return (
-                self.driver.ele("Try again later", timeout=self.TIMEOUT_DETECTION)
-                .states()
+                self.driver.element("Try again later", timeout=self.timeouts["detection"])
+                .element_states()
                 .is_displayed
             )
         except Exception:
@@ -144,6 +198,44 @@ class RecaptchaSolver:
     def get_token(self) -> Optional[str]:
         """Get the reCAPTCHA token if available."""
         try:
-            return self.driver.ele("#recaptcha-token").attrs["value"]
+            return self.driver.element("#recaptcha-token", timeout=self.timeouts["standard"]).attrs()["value"]
         except Exception:
             return None
+
+def main():
+    Settings.chrome_executable_path = '/usr/bin/google-chrome'  # Or other path
+
+    # Config for DrissionPage, mimic a real browser
+    user_data_dir = os.path.join(os.getenv("HOME"), ".chrome_profile")
+    driver = Chromium(
+        user_data_dir=user_data_dir,
+        headless=False, # Use True to see a UI, keep false to make it headless
+        is_system_chrome=True,
+        user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36", # or other user agent
+        # proxy='socks5://127.0.0.1:1080' # Replace your socks or http proxy here if needed
+    )
+    browser = DrissionPageBrowser(driver)
+    browser.clear_cookies()
+    solver = RecaptchaSolver(browser)
+
+    sites = ['twitter.com', 'youtube.com', 'tiktok.com', 'reddit.com']
+    queries = {site: f'"rednote" site:{site}' for site in sites}
+
+    for site, query in queries.items():
+        logging.info(f"Monitoring advance url https://www.google.com/search?q={query}&tbs=None&num=100&start=0 for all, page 1")
+        logging.info(f"Monitoring {site} for all, page 1")
+
+        browser.get(f"https://www.google.com/search?q={query}&tbs=None&num=100&start=0")
+
+        try:
+            solver.solveCaptcha()
+            # ... process your scrape results
+        except Exception as e:
+            logging.error(f"Error processing page 1 for {site}: {str(e)}")
+
+        time.sleep(random.uniform(2, 10))  # Random sleep to avoid detection
+    browser.quit()
+
+
+if __name__ == "__main__":
+    main()
