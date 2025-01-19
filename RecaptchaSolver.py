@@ -13,7 +13,7 @@ from DrissionPage.common import Settings
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Browser(Protocol):
-    def wait_element_displayed(self, selector:str, timeout:int): ...
+    def wait.ele_displayed(self, selector:str, timeout:int): ...
     def element(self, selector: str, timeout: int): ...
     def click(self): ...
     def input(self, value: str): ...
@@ -26,7 +26,7 @@ class Browser(Protocol):
 class DrissionPageBrowser(Browser):
     def __init__(self, driver: Chromium):
         self.driver = driver
-    def wait_element_displayed(self, selector:str, timeout:int):
+    def wait.ele_displayed(self, selector:str, timeout:int):
         self.driver.wait.ele_displayed(selector, timeout=timeout)
     def element(self, selector: str, timeout: int):
         return self.driver.ele(selector, timeout=timeout)
@@ -88,7 +88,7 @@ class RecaptchaSolver:
 
     def _solve_captcha_attempt(self) -> None:
         # Handle main reCAPTCHA iframe
-        self.driver.wait_element_displayed(
+        self.driver.wait.ele_displayed(
             "@title=reCAPTCHA", timeout=self.timeouts["standard"]
         )
         time.sleep(0.1)
@@ -96,7 +96,7 @@ class RecaptchaSolver:
         logging.info('found reCAPTCHA')
 
         # Click the checkbox
-        iframe_inner.wait_element_displayed(
+        iframe_inner.wait.ele_displayed(
             ".rc-anchor-content", timeout=self.timeouts["standard"]
         )
         iframe_inner.element(".rc-anchor-content", timeout=self.timeouts["short"]).click()
@@ -110,7 +110,7 @@ class RecaptchaSolver:
         iframe = self.driver.element("xpath://iframe[contains(@title, 'recaptcha')]", timeout=self.timeouts["standard"])
         logging.info('found reCAPTCHA  recaptcha iframe')
 
-        iframe.wait_element_displayed(
+        iframe.wait.ele_displayed(
             "#recaptcha-audio-button", timeout=self.timeouts["standard"]
         )
         iframe.element("#recaptcha-audio-button", timeout=self.timeouts["short"]).click()
@@ -122,7 +122,7 @@ class RecaptchaSolver:
             raise Exception("Captcha detected bot behavior")
 
         # Download and process audio
-        iframe.wait_element_displayed("#audio-source", timeout=self.timeouts["standard"])
+        iframe.wait.ele_displayed("#audio-source", timeout=self.timeouts["standard"])
         src = iframe.element("#audio-source", timeout=self.timeouts["standard"]).attrs()["src"]
         logging.info('found audio source')
 
