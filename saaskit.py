@@ -27,9 +27,9 @@ def gossip():
     print('=====sites',sites)
 
     # Ensure at least one keyword is provided
-    if not keywords:
-        print('At least input one gossip keyword.')
-        return
+    # if not keywords:
+        # print('At least input one gossip keyword.')
+        # return
 
     # Split keywords if multiple are provided
     if ',' in keywords:
