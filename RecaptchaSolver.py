@@ -122,10 +122,11 @@ class RecaptchaSolver:
             raise Exception("Captcha detected bot behavior")
 
         # Download and process audio
-        print('iframe',iframe.html)
-        iframe.wait.ele_displayed("#audio-source", timeout=self.timeouts["standard"])
+        # print('iframe',iframe.html)
+        # iframe.wait.ele_displayed("#audio-source", timeout=self.timeouts["standard"])
+        print('found audio source')
         src = iframe.ele("#audio-source", timeout=self.timeouts["standard"]).attrs()["src"]
-        logging.info('found audio source')
+        logging.info('found audio source src',src)
 
         try:
             text_response = self._process_audio_challenge(src)
